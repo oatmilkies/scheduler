@@ -5,6 +5,10 @@ import "components/Appointment/styles.scss";
 import Header from "components/Appointment/Header";
 import Empty from "components/Appointment/Empty";
 import Show from "components/Appointment/Show";
+import Confirm from "./Confirm";
+import Error from "./Error";
+import Form from "./Form";
+import Status from "./Status";
 
 import useVisualMode from "hooks/useVisualMode";
 
@@ -20,6 +24,10 @@ const ERROR_DELETE = "ERROR_DELETE";
 
 
 export default function Appointment(props) {
+  const { mode, transition, back } = useVisualMode(
+    props.interview ? SHOW : EMPTY
+  );
+
   //Save an appointment
   function save(name, interviewer) {
     const interview = {
@@ -50,8 +58,8 @@ export default function Appointment(props) {
       <Header time={props.time} />
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}
       {mode === SHOW &&
-        <Show student={interview.student}
-          interviewer={interview.interviewer}
+        <Show student={props.interview.student}
+          interviewer={props.interview.interviewer}
           onDelete={() => transition(CONFIRM)}
           onEdit={() => transition(EDIT)}
         />
@@ -63,8 +71,8 @@ export default function Appointment(props) {
       {/* Render edit Form component when mode is EDIT */}
       {mode === EDIT && (
         <Form
-          name={interview.student}
-          interviewer={interview.interviewer.id}
+          name={props.interview.student}
+          interviewer={props.interview.interviewer.id}
           interviewers={props.interviewers}
           onCancel={back}
           onSave={save}
