@@ -8,6 +8,7 @@ export default function Form(props) {
   const [interviewer, setInterviewer] = useState(props.interviewer || null);
   const [error, setError] = useState("");
 
+
   function reset() {
     setName("");
     setError("");
@@ -25,9 +26,15 @@ export default function Form(props) {
       return;
     }
 
+    if (interviewer === null) {
+      setError("Please select an interviewer");
+      return;
+    }
+
     setError("");
     props.onSave(name, interviewer);
   }
+
 
   return (
     <main className="appointment__card appointment__card--create">
@@ -42,6 +49,7 @@ export default function Form(props) {
             onChange={event => {
               setName(event.target.value);
             }}
+            data-testid="student-name-input"
           />
         </form>
         <section className="appointment__validation">{error}</section>
