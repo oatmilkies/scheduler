@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 
 import { render, cleanup, fireEvent, prettyDOM } from "@testing-library/react";
 import {
@@ -103,6 +104,7 @@ describe("Application", () => {
     debug();
   });
 
+
   it("loads data, edits an interview and keeps the spots remaining for Monday the same", async () => {
     // 1. Render the Application.
     const { container, debug } = render(<Application />);
@@ -136,7 +138,7 @@ describe("Application", () => {
     fireEvent.click(getByAltText(appointment, "Edit"));
 
     // 5. Change the student name from "Me Me" to "You You"
-    fireEvent.change(findByText(appointment, "Me Me"), {
+    fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
       target: { value: "You You" },
     });
     // 6. Click the "Save" button on that same appointment.
@@ -151,4 +153,67 @@ describe("Application", () => {
 
     debug();
   });
+
+
+  it("shows the save error when failing to save an appointment", async () => {
+    axios.put.mockRejectedValueOnce(new Error("Could not book appointment."));
+
+    // 1. Render the Application.
+    const { container, debug } = render(<Application />);
+
+    // 2. Wait until the text "Archie Cohen" is displayed.
+    await findByText(container, "Archie Cohen");
+
+    // 3. Click the "Add" button on the first empty appointment.
+    const appointments = getAllByTestId(container, "appointment");
+    const appointment = appointments[0];
+
+    fireEvent.click(getByAltText(appointment, "Add"));
+
+    // 4. Enter the name "Lydia Miller-Jones" into the input with the placeholder "Enter Student Name".
+    fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
+      target: { value: "Lydia Miller-Jones" },
+    });
+
+    // 5. Click the first interviewer in the list.
+    fireEvent.click(getByAltText(appointment, "Sylvia Palmer"));
+    // 6. Click the "Save" button on that same appointment.
+    fireEvent.click(getByText(appointment, "Save"));
+
+    // 7. Check that the saving error message is displayed.
+    await findByText(appointment, "Could not book appointment.")
+
+    debug();
+  });
+
+
+  it("shows the delete error when failing to delete an existing appointment", async () => {
+    axios.delete.mockRejectedValueOnce();
+
+    // 1. Render the Application.
+    const { container, debug } = render(<Application />);
+
+    // 2. Wait until the text "Archie Cohen" is displayed.
+    await findByText(container, "Archie Cohen");
+
+    // 3. Click the "Delete" button on the booked appointment.
+    const appointment = getAllByTestId(container, "appointment").find((appointment) =>
+      queryByText(appointment, "Archie Cohen")
+    );
+
+    fireEvent.click(queryByAltText(appointment, "Delete"));
+
+    // 4. Check that the confirmation message is shown.
+    expect(getByText(appointment, "Are you sure you would like to delete?")).toBeInTheDocument();
+
+    // 5. Click the "Confirm" button on the confirmation.
+    fireEvent.click(getByText(appointment, "Confirm"));
+
+    // 6. Check that the saving error message is displayed.
+    // expect(getByText(appointment, "Could not cancel appointment.")).toBeInTheDocument();
+    await findByText(appointment, "Could not cancel appointment.")
+
+    debug();
+  });
+
 });
